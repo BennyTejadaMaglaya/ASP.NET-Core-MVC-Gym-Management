@@ -1,9 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using GymManagement.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
-using System.Numerics;
-using TMADLANGBAYAN1_Gym_Management.Models;
 
-namespace TMADLANGBAYAN1_Gym_Management.Data
+namespace GymManagement.Data
 {
     public static class GymInitializer
     {
@@ -20,27 +19,26 @@ namespace TMADLANGBAYAN1_Gym_Management.Data
             using (var context = new GymContext(
                 serviceProvider.GetRequiredService<DbContextOptions<GymContext>>()))
             {
-				//Refresh the database as per the parameter options
-				//Refresh the database as per the parameter options
-				#region Prepare the Database
-				try
-				{
-					//Note: .CanConnect() will return false if the database is not there!
-					if (DeleteDatabase || !context.Database.CanConnect())
-					{
-						context.Database.EnsureDeleted(); //Delete the existing version 
-						if (UseMigrations)
-						{
-							context.Database.Migrate(); //Create the Database and apply all migrations
-						}
-						else
-						{
-							context.Database.EnsureCreated(); //Create and update the database as per the Model
-						}
-						//Now create any additional database objects such as Triggers or Views
-						//--------------------------------------------------------------------
-						//Create the Triggers
-						string sqlCmd = @"
+                //Refresh the database as per the parameter options
+                #region Prepare the Database
+                try
+                {
+                    //Note: .CanConnect() will return false if the database is not there!
+                    if (DeleteDatabase || !context.Database.CanConnect())
+                    {
+                        context.Database.EnsureDeleted(); //Delete the existing version 
+                        if (UseMigrations)
+                        {
+                            context.Database.Migrate(); //Create the Database and apply all migrations
+                        }
+                        else
+                        {
+                            context.Database.EnsureCreated(); //Create and update the database as per the Model
+                        }
+                        //Now create any additional database objects such as Triggers or Views
+                        //--------------------------------------------------------------------
+                        //Create the Triggers for Client
+                        string sqlCmd = @"
                             CREATE TRIGGER SetClientTimestampOnUpdate
                             AFTER UPDATE ON Clients
                             BEGIN
@@ -49,9 +47,9 @@ namespace TMADLANGBAYAN1_Gym_Management.Data
                                 WHERE rowid = NEW.rowid;
                             END;
                         ";
-						context.Database.ExecuteSqlRaw(sqlCmd);
+                        context.Database.ExecuteSqlRaw(sqlCmd);
 
-						sqlCmd = @"
+                        sqlCmd = @"
                             CREATE TRIGGER SetClientTimestampOnInsert
                             AFTER INSERT ON Clients
                             BEGIN
@@ -60,9 +58,10 @@ namespace TMADLANGBAYAN1_Gym_Management.Data
                                 WHERE rowid = NEW.rowid;
                             END
                         ";
-						context.Database.ExecuteSqlRaw(sqlCmd);
+                        context.Database.ExecuteSqlRaw(sqlCmd);
 
-						sqlCmd = @"
+                        //Triggers for GroupClass
+                        sqlCmd = @"
                             CREATE TRIGGER SetGroupClassTimestampOnUpdate
                             AFTER UPDATE ON GroupClasses
                             BEGIN
@@ -71,9 +70,9 @@ namespace TMADLANGBAYAN1_Gym_Management.Data
                                 WHERE rowid = NEW.rowid;
                             END;
                         ";
-						context.Database.ExecuteSqlRaw(sqlCmd);
+                        context.Database.ExecuteSqlRaw(sqlCmd);
 
-						sqlCmd = @"
+                        sqlCmd = @"
                             CREATE TRIGGER SetGroupClassTimestampOnInsert
                             AFTER INSERT ON GroupClasses
                             BEGIN
@@ -82,26 +81,26 @@ namespace TMADLANGBAYAN1_Gym_Management.Data
                                 WHERE rowid = NEW.rowid;
                             END
                         ";
-						context.Database.ExecuteSqlRaw(sqlCmd);
-					}
-					else //The database is already created
-					{
-						if (UseMigrations)
-						{
-							context.Database.Migrate(); //Apply all migrations
-						}
-					}
-				}
-				catch (Exception ex)
-				{
-					Debug.WriteLine(ex.GetBaseException().Message);
-				}
-				#endregion
-                
-				//Seed data needed for production and during development
-				#region Seed Required Data
-				try
-				{
+                        context.Database.ExecuteSqlRaw(sqlCmd);
+                    }
+                    else //The database is already created
+                    {
+                        if (UseMigrations)
+                        {
+                            context.Database.Migrate(); //Apply all migrations
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.GetBaseException().Message);
+                }
+                #endregion
+
+                //Seed data needed for production and during development
+                #region Seed Required Data
+                try
+                {
                     //Add some Class Start times
                     if (!context.ClassTimes.Any())
                     {
@@ -118,6 +117,26 @@ namespace TMADLANGBAYAN1_Gym_Management.Data
                          {
                              ID = 19,
                              StartTime = "7:00 PM"
+                         });
+                        context.SaveChanges();
+                    }
+
+                    //Add some Membership types
+                    if (!context.MembershipTypes.Any())
+                    {
+                        context.MembershipTypes.AddRange(
+                         new MembershipType
+                         {
+                             Type = "Basic",
+                             StandardFee = 100d
+                         }, new MembershipType
+                         {
+                             Type = "Premium",
+                             StandardFee = 175d
+                         }, new MembershipType
+                         {
+                             Type = "VIP",
+                             StandardFee = 300d
                          });
                         context.SaveChanges();
                     }
@@ -148,23 +167,137 @@ namespace TMADLANGBAYAN1_Gym_Management.Data
                         context.SaveChanges();
                     }
 
-                    //Add some Membership types
-                    if (!context.MembershipTypes.Any())
+                    //Add some Exercises
+                    if (!context.Exercises.Any())
                     {
-                        context.MembershipTypes.AddRange(
-                         new MembershipType
-                         {
-                             Type = "Basic",
-                             StandardFee = 100d
-                         }, new MembershipType
-                         {
-                             Type = "Premium",
-                             StandardFee = 175d
-                         }, new MembershipType
-                         {
-                             Type = "VIP",
-                             StandardFee = 300d
-                         });
+                        //Personal Training
+                        int fitnessCategoryID = context.FitnessCategories.FirstOrDefault(d => d.Category == "Personal Training").ID;
+                        string[] PT = new string[] { "squats", "deadlifts", "lunges", "bench - press", "bicep curls", "push - ups", "pull - ups", "chest press", "calf raises", "leg raises", "shoulder press", "tricep dips" };
+                        foreach (string exercise in PT)
+                        {
+                            Exercise e = new Exercise
+                            {
+                                Name = exercise,
+                            };
+                            context.Exercises.Add(e);
+                            context.SaveChanges();
+                            //Since it has been saved, the exercise ID will br the new Identity value generated by the database
+                            ExerciseCategory c = new ExerciseCategory
+                            {
+                                ExerciseID = e.ID,
+                                FitnessCategoryID = fitnessCategoryID
+
+                            };
+                            context.ExerciseCategories.Add(c);
+
+                        }
+
+                        //Cardio
+                        fitnessCategoryID = context.FitnessCategories.FirstOrDefault(d => d.Category == "Cardio").ID;
+                        string[] Cardio = new string[] { "running", "cycling", "elliptical training", "circuit training", "kickboxing", "aerobics", "dancing" };
+                        foreach (string exercise in Cardio)
+                        {
+                            Exercise e = new Exercise
+                            {
+                                Name = exercise,
+                            };
+                            context.Exercises.Add(e);
+                            context.SaveChanges();
+                            ExerciseCategory c = new ExerciseCategory
+                            {
+                                ExerciseID = e.ID,
+                                FitnessCategoryID = fitnessCategoryID
+
+                            };
+                            context.ExerciseCategories.Add(c);
+                        }
+
+                        //Yoga
+                        fitnessCategoryID = context.FitnessCategories.FirstOrDefault(d => d.Category == "Yoga").ID;
+                        string[] Yoga = new string[] { "warrior pose", "tree pose", "cobra pose", "cat - cow pose", "downward dog pose" };
+                        foreach (string exercise in Yoga)
+                        {
+                            Exercise e = new Exercise
+                            {
+                                Name = exercise,
+                            };
+                            context.Exercises.Add(e);
+                            context.SaveChanges();
+                            ExerciseCategory c = new ExerciseCategory
+                            {
+                                ExerciseID = e.ID,
+                                FitnessCategoryID = fitnessCategoryID
+
+                            };
+                            context.ExerciseCategories.Add(c);
+                        }
+
+                        //Swimming
+                        string[] Swimming = new string[] { "water jogging", "pool sprints", "pool dancing" };
+                        fitnessCategoryID = context.FitnessCategories.FirstOrDefault(d => d.Category == "Swimming").ID;
+                        foreach (string exercise in Swimming)
+                        {
+                            Exercise e = new Exercise
+                            {
+                                Name = exercise,
+                            };
+                            context.Exercises.Add(e);
+                            context.SaveChanges();
+                            ExerciseCategory c = new ExerciseCategory
+                            {
+                                ExerciseID = e.ID,
+                                FitnessCategoryID = fitnessCategoryID
+
+                            };
+                            context.ExerciseCategories.Add(c);
+                        }
+
+                        //High Intensity Interval Training
+                        fitnessCategoryID = context.FitnessCategories.FirstOrDefault(d => d.Category == "High Intensity Interval Training").ID;
+                        string[] HIT = new string[] { "sprints", "box jumps", "squat jumps", "high knees" };
+                        foreach (string exercise in HIT)
+                        {
+                            Exercise e = new Exercise
+                            {
+                                Name = exercise,
+                            };
+                            context.Exercises.Add(e);
+                            context.SaveChanges();
+                            ExerciseCategory c = new ExerciseCategory
+                            {
+                                ExerciseID = e.ID,
+                                FitnessCategoryID = fitnessCategoryID
+
+                            };
+                            context.ExerciseCategories.Add(c);
+                        }
+                        context.SaveChanges();
+                        //We have one exercise (push-ups) that was added to Personal Training earlier that we also want
+                        //associated with High Intensity Interval Training
+                        ExerciseCategory ec = new ExerciseCategory
+                        {
+                            ExerciseID = context.Exercises.FirstOrDefault(d => d.Name == "push - ups").ID,
+                            FitnessCategoryID = fitnessCategoryID
+
+                        };
+                        context.ExerciseCategories.Add(ec);
+
+                        //Strength Training
+                        //For this we need to take a different approach because ALL of the exercises are already seeded.
+                        //We just need to associate them with the additional Fitness Category
+                        fitnessCategoryID = context.FitnessCategories.FirstOrDefault(d => d.Category == "Strength Training").ID;
+                        string[] StrengthTraining = new string[] { "squats", "deadlifts", "bench - press", "bicep curls", "pull - ups", "tricep dips" };
+                        foreach (string exercise in StrengthTraining)
+                        {
+                            ExerciseCategory c = new ExerciseCategory
+                            {
+                                ExerciseID = context.Exercises.FirstOrDefault(d => d.Name == exercise).ID,
+                                FitnessCategoryID = fitnessCategoryID
+
+                            };
+                            context.ExerciseCategories.Add(c);
+                        }
+                        //Save all data
                         context.SaveChanges();
                     }
                 }
@@ -239,21 +372,21 @@ namespace TMADLANGBAYAN1_Gym_Management.Data
                             new GroupClass
                             {
                                 Description = "Intense Cardio workout",
-                                DOW = EnumDayOfWeek.Monday,
+                                DOW = DOW.Monday,
                                 ClassTimeID = 10,
                                 FitnessCategoryID = context.FitnessCategories.FirstOrDefault(c => c.Category == "Cardio").ID,
                                 InstructorID = context.Instructors.FirstOrDefault(d => d.FirstName == "Fred" && d.LastName == "Flintstone").ID
                             }, new GroupClass
                             {
                                 Description = "Introductory Yoga",
-                                DOW = EnumDayOfWeek.Tuesday,
+                                DOW = DOW.Tuesday,
                                 ClassTimeID = 14,
                                 FitnessCategoryID = context.FitnessCategories.FirstOrDefault(c => c.Category == "Yoga").ID,
                                 InstructorID = context.Instructors.FirstOrDefault(d => d.FirstName == "Wilma" && d.LastName == "Flintstone").ID
                             }, new GroupClass
                             {
                                 Description = "Endurance Swimming",
-                                DOW = EnumDayOfWeek.Friday,
+                                DOW = DOW.Friday,
                                 ClassTimeID = 14,
                                 FitnessCategoryID = context.FitnessCategories.FirstOrDefault(c => c.Category == "Swimming").ID,
                                 InstructorID = context.Instructors.FirstOrDefault(d => d.FirstName == "Barney" && d.LastName == "Rubble").ID
@@ -390,7 +523,7 @@ namespace TMADLANGBAYAN1_Gym_Management.Data
                     }
                     //Add more GroupClasses
                     //We will need an array of values from our Enum
-                    Array valuesDOW = Enum.GetValues(typeof(EnumDayOfWeek));
+                    Array valuesDOW = Enum.GetValues(typeof(DOW));
                     //You can now get a random DOW with  = (DOW)valuesDOW.GetValue(random.Next(valuesDOW.Length))
 
                     //We will need a collection of the primary keys of the Fitness Categories
@@ -410,7 +543,7 @@ namespace TMADLANGBAYAN1_Gym_Management.Data
                     int classTimeIDCount = classTimeIDs.Length;
 
                     //Create up to 30 more group classes
-                    for (int i = 0; i < 30; i++)
+                    for (int i = 0; i < 60; i++)
                     {
                         //Choose the fitness category
                         int fitnessCategoryOrdinal = random.Next(fitCatIDCount);
@@ -418,7 +551,7 @@ namespace TMADLANGBAYAN1_Gym_Management.Data
                         {
                             Description = intensities[random.Next(10)] + " "
                                 + fitCat[fitnessCategoryOrdinal] + " Workout",
-                            DOW = (EnumDayOfWeek)valuesDOW.GetValue(random.Next(valuesDOW.Length)),
+                            DOW = (DOW)valuesDOW.GetValue(random.Next(valuesDOW.Length)),
                             FitnessCategoryID = fitCatIDs[fitnessCategoryOrdinal],
                             InstructorID = instructorIDs[random.Next(instructorIDCount)],
                             ClassTimeID = classTimeIDs[random.Next(classTimeIDCount)]
