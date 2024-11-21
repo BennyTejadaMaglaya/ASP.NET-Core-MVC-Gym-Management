@@ -16,6 +16,7 @@
 	<table class="table">
 		<thead>
 			<tr>
+				<th></th>
 				<th>
 					@Html.DisplayNameFor(model => model.MembershipNumber)
 				</th>
@@ -35,15 +36,6 @@
 					@Html.DisplayNameFor(model => model.PostalCode)
 				</th>
 				<th>
-					@Html.DisplayNameFor(model => model.MembershipStartDate)
-				</th>
-				<th>
-					@Html.DisplayNameFor(model => model.MembershipEndDate)
-				</th>
-				<th>
-					@Html.DisplayNameFor(model => model.MembershipFee)
-				</th>
-				<th>
 					@Html.DisplayNameFor(model => model.FeePaid)
 				</th>
 				<th>
@@ -56,6 +48,17 @@
 			@foreach (var item in Model)
 			{
 				<tr>
+					<td>
+						@{
+							if (item.ClientThumbnail?.Content != null)
+							{
+								string imageBase64 = Convert.ToBase64String(item.ClientThumbnail.Content);
+								string imageSrc = string.Format("data:" + item.ClientThumbnail.MimeType + ";base64,{0}", imageBase64);
+								<img src="@imageSrc" alt="Profile Picture of @item?.Summary"
+									 title="Profile Picture of @item?.Summary" class="img-fluid rounded" />
+							}
+						}
+					</td>
 					<td>
 						@Html.DisplayFor(modelItem => item.MembershipNumber)
 					</td>
@@ -75,15 +78,6 @@
 						@Html.DisplayFor(modelItem => item.PostalCode)
 					</td>
 					<td>
-						@Html.DisplayFor(modelItem => item.MembershipStartDate)
-					</td>
-					<td>
-						@Html.DisplayFor(modelItem => item.MembershipEndDate)
-					</td>
-					<td>
-						@Html.DisplayFor(modelItem => item.MembershipFee)
-					</td>
-					<td>
 						@Html.DisplayFor(modelItem => item.FeePaid)
 					</td>
 					<td>
@@ -100,3 +94,11 @@
 	</table>
 	<partial name="_PagingNavBar" />
 </form>
+@section Scripts {
+	<script type="text/javascript">
+		var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+		var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+			return new bootstrap.Tooltip(tooltipTriggerEl)
+		})
+	</script>
+}

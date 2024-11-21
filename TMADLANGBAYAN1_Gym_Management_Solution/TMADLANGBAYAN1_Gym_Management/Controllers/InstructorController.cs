@@ -237,7 +237,7 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
 
             var instructor = await _context.Instructors
                 .Include(i => i.InstructorDocuments)
-                .FirstOrDefaultAsync(d => d.ID == id);
+                .FirstOrDefaultAsync(i => i.ID == id);
             if (instructor == null)
             {
                 return NotFound();
@@ -364,8 +364,8 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
         public async Task<FileContentResult> Download(int id)
         {
             var theFile = await _context.UploadedFiles
-                .Include(d => d.FileContent)
-                .Where(f => f.ID == id)
+                .Include(u => u.FileContent)
+                .Where(u => u.ID == id)
                 .FirstOrDefaultAsync();
 
             if (theFile?.FileContent?.Content == null || theFile.MimeType == null)

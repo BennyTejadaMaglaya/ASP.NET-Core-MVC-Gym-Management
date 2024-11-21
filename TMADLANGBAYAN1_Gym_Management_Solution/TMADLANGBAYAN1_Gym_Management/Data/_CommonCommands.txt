@@ -3,3 +3,5 @@ update-database -Context ApplicationDbContext
 
 Add-Migration -Context GymContext -OutputDir Data\GMigrations Initial
 update-database -Context GymContext
+
+Install-Package SkiaSharp

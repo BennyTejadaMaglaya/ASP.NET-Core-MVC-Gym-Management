@@ -3,10 +3,16 @@
 <partial name="_ViewHeading" />
 
 <hr />
-<form asp-action="Create">
+<form asp-action="Create" method="post" enctype="multipart/form-data">
 	<div asp-validation-summary="ModelOnly" class="text-danger"></div>
 	<div class="row">
 		<div class="col-md-4">
+			<div class="form-group">
+				<label class="control-label custom-file-label">Picture File:</label>
+				<div class="input-group mb-3">
+					<input type="file" class="form-control" name="thePicture" id="thePicture">
+				</div>
+			</div>
 			<div class="form-group">
 				<label asp-for="MembershipNumber" class="control-label"></label>
 				<input asp-for="MembershipNumber" class="form-control" />
@@ -51,12 +57,12 @@
 			</div>
 			<div class="form-group">
 				<label asp-for="HealthCondition" class="control-label"></label>
-				<input asp-for="HealthCondition" class="form-control" />
+				<textarea asp-for="HealthCondition" rows="3" class="form-control"></textarea>
 				<span asp-validation-for="HealthCondition" class="text-danger"></span>
 			</div>
 			<div class="form-group">
 				<label asp-for="Notes" class="control-label"></label>
-				<input asp-for="Notes" class="form-control" />
+				<textarea asp-for="Notes" rows="5" class="form-control"></textarea>
 				<span asp-validation-for="Notes" class="text-danger"></span>
 			</div>
 		</div>
@@ -73,7 +79,10 @@
 			</div>
 			<div class="form-group">
 				<label asp-for="MembershipTypeID" class="control-label"></label>
-				<select asp-for="MembershipTypeID" class="form-control" asp-items="ViewBag.MembershipTypeID"></select>
+				<select asp-for="MembershipTypeID" class="form-control" asp-items="ViewBag.MembershipTypeID">
+					<option value="">Select the Membership Type</option>
+				</select>
+				<span asp-validation-for="MembershipTypeID" class="text-danger"></span>
 			</div>
 			<div class="form-group">
 				<label asp-for="MembershipFee" class="control-label"></label>

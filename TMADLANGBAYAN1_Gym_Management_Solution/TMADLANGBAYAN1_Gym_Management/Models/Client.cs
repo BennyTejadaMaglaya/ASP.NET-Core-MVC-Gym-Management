@@ -7,7 +7,48 @@ namespace TMADLANGBAYAN1_Gym_Management.Models
     {
         public int ID { get; set; }
 
-        [Display(Name = "Name")]
+		public string Summary
+		{
+			get
+			{
+				string FullName = FirstName
+					+ (string.IsNullOrEmpty(MiddleName) ? " " :
+						(" " + (char?)MiddleName[0] + ". ").ToUpper())
+					+ LastName;
+				return FullName + Membership;
+			}
+		}
+
+		[Display(Name = "Mem. Status")]
+		public string MembershipStatus
+		{
+			get
+			{
+				DateTime today = DateTime.Today;
+				if (MembershipEndDate <= today)
+				{
+					return "Expired";
+				}
+				int totalMonths = ((MembershipEndDate.Year - today.Year) * 12) + MembershipEndDate.Month - today.Month;
+				DateTime tempDate = today.AddMonths(totalMonths);
+
+				if (tempDate > MembershipEndDate)
+				{
+					totalMonths--;
+					tempDate = today.AddMonths(totalMonths);
+				}
+
+				int days = (MembershipEndDate - tempDate).Days;
+
+				return "Exp. in " + $"{totalMonths} Months, {days} Days";
+			}
+		}
+
+		[Display(Name = "Mem.Type")]
+		public string Membership => (String.IsNullOrEmpty(MembershipType?.Type)) ? ""
+					: " - " + MembershipType?.Type + " Mem.";
+
+		[Display(Name = "Name")]
         public string FormalName
         {
             get
@@ -138,7 +179,10 @@ namespace TMADLANGBAYAN1_Gym_Management.Models
         [Display(Name = "Membership Type")]
         public MembershipType? MembershipType { get; set; }
 
-        [Display(Name = "Group Classes")]
+		public ClientPhoto? ClientPhoto { get; set; }
+		public ClientThumbnail? ClientThumbnail { get; set; }
+
+		[Display(Name = "Group Classes")]
         public ICollection<Enrollment> Enrollments { get; set; } = new HashSet<Enrollment>();
 
         public ICollection<Workout> Workouts { get; set; } = new HashSet<Workout>();

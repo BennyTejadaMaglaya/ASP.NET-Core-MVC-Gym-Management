@@ -27,7 +27,8 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
         {
             var gymContext = _context.Clients
                 .Include(c => c.MembershipType)
-                .AsNoTracking()
+				.Include(c => c.ClientThumbnail)
+				.AsNoTracking()
                 ;
 
 			//Handle Paging
@@ -48,7 +49,8 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
 
             var client = await _context.Clients
                 .Include(c => c.MembershipType)
-                .AsNoTracking()
+				.Include(c => c.ClientPhoto)
+				.AsNoTracking()
                 .FirstOrDefaultAsync(c => c.ID == id)
                 ;
             if (client == null)
@@ -71,13 +73,14 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,MembershipNumber,FirstName,MiddleName,LastName,Phone,Email,DOB,PostalCode,HealthCondition,Notes,MembershipStartDate,MembershipEndDate,MembershipFee,FeePaid,MembershipTypeID")] Client client)
+        public async Task<IActionResult> Create([Bind("ID,MembershipNumber,FirstName,MiddleName,LastName,Phone,Email,DOB,PostalCode,HealthCondition,Notes,MembershipStartDate,MembershipEndDate,MembershipFee,FeePaid,MembershipTypeID")] Client client, IFormFile? thePicture)
         {
             try
             {
                 if (ModelState.IsValid)
                 {
-                    _context.Add(client);
+					await AddPicture(client, thePicture);
+					_context.Add(client);
                     await _context.SaveChangesAsync();
                     TempData["SuccessMessage"] = "Client successfully added!";
                     return RedirectToAction(nameof(Index));
@@ -108,8 +111,10 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
                 return NotFound();
             }
 
-            var client = await _context.Clients.FindAsync(id);
-            if (client == null)
+            var client = await _context.Clients
+				.Include(c => c.ClientPhoto)
+				.FirstOrDefaultAsync(c => c.ID == id);
+			if (client == null)
             {
                 return NotFound();
             }
@@ -122,9 +127,13 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Byte[] RowVersion)
+        public async Task<IActionResult> Edit(int id, Byte[] RowVersion,
+			string? chkRemoveImage, IFormFile? thePicture)
         {
-            var ClientToUpdate = await _context.Clients.FirstOrDefaultAsync(c => c.ID == id);
+            var ClientToUpdate = await _context.Clients
+				.Include(c => c.MembershipType)
+				.Include(c => c.ClientPhoto)
+                .FirstOrDefaultAsync(c => c.ID == id);
 
             if (ClientToUpdate == null)
             {
@@ -139,7 +148,23 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
             {
                 try
                 {
-                    await _context.SaveChangesAsync();
+					//For the image
+					if (chkRemoveImage != null)
+					{
+						//If we are just deleting the two versions of the photo, we need to make sure the Change Tracker knows
+						//about them both so go get the Thumbnail since we did not include it.
+						ClientToUpdate.ClientThumbnail = _context.ClientThumbnails.Where(p => p.ClientID == ClientToUpdate.ID).FirstOrDefault();
+						//Then, setting them to null will cause them to be deleted from the database.
+						ClientToUpdate.ClientPhoto = null;
+						ClientToUpdate.ClientThumbnail = null;
+					}
+					else
+					{
+						await AddPicture(ClientToUpdate, thePicture);
+					}
+
+					_context.Update(ClientToUpdate);
+					await _context.SaveChangesAsync();
                     TempData["SuccessMessage"] = "Client successfully updated!";
                     return RedirectToAction(nameof(Index));
                 }
@@ -244,8 +269,9 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
             }
 
             var client = await _context.Clients
-                .Include(c => c.MembershipType)
-                .AsNoTracking()
+				.Include(c => c.MembershipType)
+				.Include(c => c.ClientPhoto)
+				.AsNoTracking()
                 .FirstOrDefaultAsync(c => c.ID == id)
                 ;
             if (client == null)
@@ -263,7 +289,8 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
         {
             var client = await _context.Clients
                 .Include(c => c.MembershipType)
-                .FirstOrDefaultAsync(c => c.ID == id)
+				.Include(c => c.ClientPhoto)
+				.FirstOrDefaultAsync(c => c.ID == id)
                 ;
 
             try
@@ -291,7 +318,53 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
 			return View(client);
         }
 
-        private bool ClientExists(int id)
+		private async Task AddPicture(Client client, IFormFile thePicture)
+		{
+			//Get the picture and save it with the Client (2 sizes)
+			if (thePicture != null)
+			{
+				string mimeType = thePicture.ContentType;
+				long fileLength = thePicture.Length;
+				if (!(mimeType == "" || fileLength == 0))//Looks like we have a file!!!
+				{
+					if (mimeType.Contains("image"))
+					{
+						using var memoryStream = new MemoryStream();
+						await thePicture.CopyToAsync(memoryStream);
+						var pictureArray = memoryStream.ToArray();//Gives us the Byte[]
+
+						//Check if we are replacing or creating new
+						if (client.ClientPhoto != null)
+						{
+							//We already have pictures so just replace the Byte[]
+							client.ClientPhoto.Content = ResizeImage.ShrinkImageWebp(pictureArray, 500, 600);
+
+							//Get the Thumbnail so we can update it.  Remember we didn't include it
+							client.ClientThumbnail = _context.ClientThumbnails.Where(p => p.ClientID == client.ID).FirstOrDefault();
+							if (client.ClientThumbnail != null)
+							{
+								client.ClientThumbnail.Content = ResizeImage.ShrinkImageWebp(pictureArray, 75, 90);
+							}
+						}
+						else //No pictures saved so start new
+						{
+							client.ClientPhoto = new ClientPhoto
+							{
+								Content = ResizeImage.ShrinkImageWebp(pictureArray, 500, 600),
+								MimeType = "image/webp"
+							};
+							client.ClientThumbnail = new ClientThumbnail
+							{
+								Content = ResizeImage.ShrinkImageWebp(pictureArray, 75, 90),
+								MimeType = "image/webp"
+							};
+						}
+					}
+				}
+			}
+		}
+
+		private bool ClientExists(int id)
         {
             return _context.Clients.Any(c => c.ID == id);
         }

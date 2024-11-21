@@ -52,8 +52,10 @@ namespace TMADLANGBAYAN1_Gym_Management.Data
         public DbSet<ExerciseCategory> ExerciseCategories { get; set; }
         public DbSet<InstructorDocument> InstructorDocuments { get; set; }
         public DbSet<UploadedFile> UploadedFiles { get; set; }
+		public DbSet<ClientPhoto> ClientPhotos { get; set; }
+		public DbSet<ClientThumbnail> ClientThumbnails { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             /*Composite*/
 

@@ -3,12 +3,45 @@
 <partial name="_ViewHeading" />
 
 <hr />
-<form asp-action="Edit">
+@{
+    var hasPicture = (Model.ClientPhoto?.Content != null);
+    if (hasPicture)
+    {
+        @:<div>
+        string imageBase64 = Convert.ToBase64String(Model.ClientPhoto.Content);
+        string imageSrc = string.Format("data:" + Model.ClientPhoto.MimeType + ";base64,{0}", imageBase64);
+                    <img src="@imageSrc" alt="Profile Picture of @Model.Summary" 
+                        title="Profile Picture of @Model.Summary" class="img-fluid rounded" />
+        @:</div><hr />
+    }
+}
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
 	<div asp-validation-summary="ModelOnly" class="text-danger"></div>
 	<input type="hidden" asp-for="ID" />
 	<input type="hidden" asp-for="RowVersion" />
+	<div>
+        @{
+            if (hasPicture)
+            {
+                        <div class="row">
+                            <div class="form-check m-3">
+                                <input class="form-check-input" type="checkbox" id="chkRemoveImage" name="chkRemoveImage">
+                                <label class="form-check-label" for="chkRemoveImage">
+                                <strong>Check to remove Image</strong>
+                                </label>
+                            </div>
+                        </div>
+            }
+        }
+    </div>
 	<div class="row">
 		<div class="col-md-4">
+			<div class="form-group">
+                <label class="control-label custom-file-label">Picture File:</label>
+                <div class="input-group mb-3">
+                    <input type="file" class="form-control" name="thePicture" id="thePicture">
+                </div>
+            </div>
 			<div class="form-group">
 				<label asp-for="MembershipNumber" class="control-label"></label>
 				<input asp-for="MembershipNumber" class="form-control" />
@@ -52,15 +85,15 @@
 				<span asp-validation-for="PostalCode" class="text-danger"></span>
 			</div>
 			<div class="form-group">
-				<label asp-for="HealthCondition" class="control-label"></label>
-				<input asp-for="HealthCondition" class="form-control" />
-				<span asp-validation-for="HealthCondition" class="text-danger"></span>
-			</div>
+                <label asp-for="HealthCondition" class="control-label"></label>
+                <textarea asp-for="HealthCondition" rows="3" class="form-control"></textarea>
+                <span asp-validation-for="HealthCondition" class="text-danger"></span>
+            </div>
 			<div class="form-group">
-				<label asp-for="Notes" class="control-label"></label>
-				<input asp-for="Notes" class="form-control" />
-				<span asp-validation-for="Notes" class="text-danger"></span>
-			</div>
+                <label asp-for="Notes" class="control-label"></label>
+                <textarea asp-for="Notes" rows="5" class="form-control"></textarea>
+                <span asp-validation-for="Notes" class="text-danger"></span>
+            </div>
 		</div>
 		<div class="col-md-4">
 			<div class="form-group">
@@ -74,10 +107,10 @@
 				<span asp-validation-for="MembershipEndDate" class="text-danger"></span>
 			</div>
 			<div class="form-group">
-				<label asp-for="MembershipTypeID" class="control-label"></label>
-				<select asp-for="MembershipTypeID" class="form-control" asp-items="ViewBag.MembershipTypeID"></select>
-				<span asp-validation-for="MembershipTypeID" class="text-danger"></span>
-			</div>
+                <label asp-for="MembershipTypeID" class="control-label"></label>
+                <select asp-for="MembershipTypeID" class="form-control" asp-items="ViewBag.MembershipTypeID"></select>
+                <span asp-validation-for="MembershipTypeID" class="text-danger"></span>
+            </div>
 			<div class="form-group">
 				<label asp-for="MembershipFee" class="control-label"></label>
 				<input asp-for="MembershipFee" class="form-control" />
