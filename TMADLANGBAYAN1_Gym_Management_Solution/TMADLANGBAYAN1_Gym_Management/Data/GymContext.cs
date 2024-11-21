@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿/* === Teejay Madlangbayan ======== */
+/* === Student Number : 4518838 === */
+using Microsoft.EntityFrameworkCore;
 using TMADLANGBAYAN1_Gym_Management.Models;
 
 namespace TMADLANGBAYAN1_Gym_Management.Data
