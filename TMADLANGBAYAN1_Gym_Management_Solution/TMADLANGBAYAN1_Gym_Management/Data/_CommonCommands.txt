@@ -1,0 +1,5 @@
+﻿Add-Migration -Context ApplicationDbContext -OutputDir Data\Migrations Initial
+update-database -Context ApplicationDbContext
+
+Add-Migration -Context GymContext -OutputDir Data\GMigrations Initial
+update-database -Context GymContext

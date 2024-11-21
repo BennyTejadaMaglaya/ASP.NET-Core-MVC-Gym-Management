@@ -1,0 +1,78 @@
+﻿@model TMADLANGBAYAN1_Gym_Management.Models.GroupClass
+
+<partial name="_ViewHeading" />
+
+<div>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Description)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Description)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.DOW)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.DOW)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.FitnessCategory)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.FitnessCategory.Category)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.ClassTime)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.ClassTime.StartTime)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Instructor)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Instructor.FormalName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Enrollments)
+        </dt>
+        <dd class="col-sm-10">
+            @{
+                int EnrollmentsCount = Model.Enrollments.Count;
+                if (EnrollmentsCount > 0)
+                {
+                    string FirstEnrollment = Model.Enrollments.FirstOrDefault().Client.FormalName;
+                    if (EnrollmentsCount > 1)
+                    {
+                        string EnrollmentsList = "";
+                        var e = Model.Enrollments.ToList();
+                        for (int i = 1; i < EnrollmentsCount; i++)
+                        {
+                            EnrollmentsList += e[i].Client.FormalName + " <br />";
+                        }
+                        <a class="" role="button" data-bs-toggle="collapse" href="#collapseEnrollments@(Model.ID)"
+                           aria-expanded="false" aria-controls="collapseEnrollments@(Model.ID)">
+                            @FirstEnrollment <span class="badge bg-info">@EnrollmentsCount</span>
+                        </a>
+                        <div class="collapse" id="collapseEnrollments@(Model.ID)">
+                            @Html.Raw(EnrollmentsList)
+                        </div>
+                    }
+                    else
+                    {
+                        @FirstEnrollment
+                    }
+                }
+            }
+        </dd>
+    </dl>
+    
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="ID" />
+        <input type="submit" value="Delete" class="btn btn-danger" /> |
+        <partial name="_BackToList" />
+    </form>
+</div>

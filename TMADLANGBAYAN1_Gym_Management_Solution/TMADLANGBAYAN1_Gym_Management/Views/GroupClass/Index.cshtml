@@ -1,0 +1,145 @@
+﻿@model IEnumerable<TMADLANGBAYAN1_Gym_Management.Models.GroupClass>
+
+<partial name="_ViewHeading" />
+
+<p>
+	<a asp-action="Create">Create New @ViewData["ControllerFriendlyName"]</a>
+</p>
+
+@if (TempData["SuccessMessage"] != null)
+{
+	<div class="alert alert-success">
+		@TempData["SuccessMessage"]
+	</div>
+}
+<form asp-action="Index" method="get">
+	<input type="hidden" name="sortDirection" value="@ViewData["sortDirection"]" />
+	<input type="hidden" name="sortField" value="@ViewData["sortField"]" />
+	<div class="form-horizontal">
+		<button class="btn @ViewData["Filtering"]" type="button" data-bs-toggle="collapse" id="filterToggle"
+				data-bs-target="#collapseFilter" aria-expanded="false" aria-controls="collapseFilter">
+			Filter/Search @ViewData["numberFilters"]
+		</button><br />
+		<div class="collapse @ViewData["ShowFilter"]" id="collapseFilter">
+			<div class="card card-body bg-light">
+				<div class="row">
+					<div class="form-group col-md-4">
+						<label class="control-label">Select by Day of the Week:</label>
+						@Html.DropDownList("DayFilter", (SelectList)ViewBag.DaySelectList,
+															"Monday to Saturday", htmlAttributes: new { @class = "form-control" })
+					</div>
+					<div class="form-group col-md-4">
+						<label class="control-label">Select by Fitness Category:</label>
+						@Html.DropDownList("FitnessCategoryID", null, "All Fitness Categories",
+															htmlAttributes: new { @class = "form-control" })
+					</div>
+					<div class="col-md-4">
+						<div class="form-group">
+							<label class="control-label">Filter by Class Time:</label>
+							@Html.DropDownList("ClassTimeID", null, "All Class Times",
+																htmlAttributes: new { @class = "form-control" })
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="form-group col-md-4">
+						<label class="control-label">Search Group Class Description:</label>
+						@Html.TextBox("SearchString", null, new { @class = "form-control" })
+					</div>
+					<div class="form-group col-md-6">
+						<label class="control-label">Filter by Instructor:</label>
+						@Html.DropDownList("InstructorID", null, "None",
+															htmlAttributes: new { @class = "form-control" })
+					</div>
+					<div class="form-group col-md-2 align-self-end">
+						<input type="submit" name="actionButton" value="Filter"
+							   class="btn btn-outline-primary" />
+						<a asp-action="Index" class="btn btn-outline-dark">Clear</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<table class="table">
+		<thead>
+			<tr>
+				<th>
+					<input type="submit" value="Description" class="btn btn-toolbar" />
+				</th>
+				<th>
+					<input type="submit" value="Day" class="btn btn-toolbar" />
+				</th>
+				<th>
+					<input type="submit" name="actionButton" value="Fitness Category" class="btn btn-link" />
+				</th>
+				<th>
+					<input type="submit" value="Start Time" class="btn btn-toolbar" />
+				</th>
+				<th>
+					<input type="submit" name="actionButton" value="Instructor" class="btn btn-link" />
+				</th>
+				<th>
+					<input type="submit" value="Clients" class="btn btn-toolbar" />
+				</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var item in Model)
+			{
+				<tr>
+					<td>
+						@Html.DisplayFor(modelItem => item.TruncatedDescription)
+					</td>
+					<td>
+						@Html.DisplayFor(modelItem => item.DOW)
+					</td>
+					<td>
+						@Html.DisplayFor(modelItem => item.FitnessCategory.Category)
+					</td>
+					<td>
+						@Html.DisplayFor(modelItem => item.ClassTime.StartTime)
+					</td>
+					<td>
+						@Html.DisplayFor(modelItem => item.Instructor.FormalName)
+					</td>
+					<td>
+						@{
+							int EnrollmentsCount = item.Enrollments.Count;
+							if (EnrollmentsCount > 0)
+							{
+								string FirstEnrollment = item.Enrollments.FirstOrDefault().Client.FormalName;
+								if (EnrollmentsCount > 1)
+								{
+									string EnrollmentsList = "";
+									var e = item.Enrollments.ToList();
+									for (int i = 1; i < EnrollmentsCount; i++)
+									{
+										EnrollmentsList += e[i].Client.FormalName + " <br />";
+									}
+									<a class="" role="button" data-bs-toggle="collapse" href="#collapseEnrollments@(item.ID)"
+									   aria-expanded="false" aria-controls="collapseEnrollments@(item.ID)">
+										@FirstEnrollment <span class="badge bg-info">@EnrollmentsCount</span>
+									</a>
+									<div class="collapse" id="collapseEnrollments@(item.ID)">
+										@Html.Raw(EnrollmentsList)
+									</div>
+								}
+								else
+								{
+									@FirstEnrollment
+								}
+							}
+						}
+					</td>
+					<td>
+						<a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
+						<a asp-action="Details" asp-route-id="@item.ID">Details</a> |
+						<a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+	<partial name="_PagingNavBar" />
+</form>
