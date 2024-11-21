@@ -1,8 +1,8 @@
-﻿using GymManagement.Models;
+﻿using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
+using TMADLANGBAYAN1_Gym_Management.Models;
 
-namespace GymManagement.Data
+namespace TMADLANGBAYAN1_Gym_Management.Data
 {
     public static class GymInitializer
     {
@@ -372,21 +372,21 @@ namespace GymManagement.Data
                             new GroupClass
                             {
                                 Description = "Intense Cardio workout",
-                                DOW = DOW.Monday,
+                                DOW = EnumDayOfWeek.Monday,
                                 ClassTimeID = 10,
                                 FitnessCategoryID = context.FitnessCategories.FirstOrDefault(c => c.Category == "Cardio").ID,
                                 InstructorID = context.Instructors.FirstOrDefault(d => d.FirstName == "Fred" && d.LastName == "Flintstone").ID
                             }, new GroupClass
                             {
                                 Description = "Introductory Yoga",
-                                DOW = DOW.Tuesday,
+                                DOW = EnumDayOfWeek.Tuesday,
                                 ClassTimeID = 14,
                                 FitnessCategoryID = context.FitnessCategories.FirstOrDefault(c => c.Category == "Yoga").ID,
                                 InstructorID = context.Instructors.FirstOrDefault(d => d.FirstName == "Wilma" && d.LastName == "Flintstone").ID
                             }, new GroupClass
                             {
                                 Description = "Endurance Swimming",
-                                DOW = DOW.Friday,
+                                DOW = EnumDayOfWeek.Friday,
                                 ClassTimeID = 14,
                                 FitnessCategoryID = context.FitnessCategories.FirstOrDefault(c => c.Category == "Swimming").ID,
                                 InstructorID = context.Instructors.FirstOrDefault(d => d.FirstName == "Barney" && d.LastName == "Rubble").ID
@@ -523,7 +523,7 @@ namespace GymManagement.Data
                     }
                     //Add more GroupClasses
                     //We will need an array of values from our Enum
-                    Array valuesDOW = Enum.GetValues(typeof(DOW));
+                    Array valuesDOW = Enum.GetValues(typeof(EnumDayOfWeek));
                     //You can now get a random DOW with  = (DOW)valuesDOW.GetValue(random.Next(valuesDOW.Length))
 
                     //We will need a collection of the primary keys of the Fitness Categories
@@ -551,7 +551,7 @@ namespace GymManagement.Data
                         {
                             Description = intensities[random.Next(10)] + " "
                                 + fitCat[fitnessCategoryOrdinal] + " Workout",
-                            DOW = (DOW)valuesDOW.GetValue(random.Next(valuesDOW.Length)),
+                            DOW = (EnumDayOfWeek)valuesDOW.GetValue(random.Next(valuesDOW.Length)),
                             FitnessCategoryID = fitCatIDs[fitnessCategoryOrdinal],
                             InstructorID = instructorIDs[random.Next(instructorIDCount)],
                             ClassTimeID = classTimeIDs[random.Next(classTimeIDCount)]

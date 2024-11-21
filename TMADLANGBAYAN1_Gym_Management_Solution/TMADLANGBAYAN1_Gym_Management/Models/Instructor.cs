@@ -123,6 +123,9 @@ namespace TMADLANGBAYAN1_Gym_Management.Models
 
         public ICollection<GroupClass> GroupClasses { get; set; } = new HashSet<GroupClass>();
 
+        [Display(Name = "Workouts")]
+        public ICollection<Workout> Workouts { get; set; } = new HashSet<Workout>();
+
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             DateTime today = DateTime.Today;

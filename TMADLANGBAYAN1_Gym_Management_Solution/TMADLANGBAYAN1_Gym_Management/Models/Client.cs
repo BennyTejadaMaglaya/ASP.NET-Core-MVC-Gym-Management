@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace TMADLANGBAYAN1_Gym_Management.Models
 {
@@ -142,11 +141,13 @@ namespace TMADLANGBAYAN1_Gym_Management.Models
         [Display(Name = "Group Classes")]
         public ICollection<Enrollment> Enrollments { get; set; } = new HashSet<Enrollment>();
 
-		[ScaffoldColumn(false)]
-		[Timestamp]
-		public Byte[]? RowVersion { get; set; }//Added for concurrency
+        public ICollection<Workout> Workouts { get; set; } = new HashSet<Workout>();
 
-		public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        [ScaffoldColumn(false)]
+        [Timestamp]
+        public Byte[]? RowVersion { get; set; }//Added for concurrency
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             if (DOB?.AddYears(16) > DateTime.Today)
             {

@@ -1,7 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
-using System.Numerics;
-
-namespace TMADLANGBAYAN1_Gym_Management.Models
+﻿namespace TMADLANGBAYAN1_Gym_Management.Models
 {
     public class Enrollment
     {

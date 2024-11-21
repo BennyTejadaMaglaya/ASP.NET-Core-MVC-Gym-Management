@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace GymManagement.Models
+namespace TMADLANGBAYAN1_Gym_Management.Models
 {
     public class Workout : IValidatableObject
     {
@@ -23,6 +23,12 @@ namespace GymManagement.Models
         [Display(Name = "Client")]
         public int ClientID { get; set; }
         public Client? Client { get; set; }
+
+        [Required(ErrorMessage = "You must select the Instructor leading the workout.")]
+        [Display(Name = "Instructor")]
+        public int InstructorID { get; set; }
+
+        public Instructor? Instructor { get; set; }
 
         [Display(Name = "Exercises")]
         public ICollection<WorkoutExercise> WorkoutExercises { get; set; } = new HashSet<WorkoutExercise>();

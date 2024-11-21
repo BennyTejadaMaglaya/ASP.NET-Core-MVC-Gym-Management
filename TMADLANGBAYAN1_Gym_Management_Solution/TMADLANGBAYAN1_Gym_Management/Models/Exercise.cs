@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace GymManagement.Models
+namespace TMADLANGBAYAN1_Gym_Management.Models
 {
     public class Exercise
     {
