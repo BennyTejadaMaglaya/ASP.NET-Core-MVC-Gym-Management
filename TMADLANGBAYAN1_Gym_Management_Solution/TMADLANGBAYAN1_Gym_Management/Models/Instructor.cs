@@ -126,6 +126,9 @@ namespace TMADLANGBAYAN1_Gym_Management.Models
         [Display(Name = "Workouts")]
         public ICollection<Workout> Workouts { get; set; } = new HashSet<Workout>();
 
+        [Display(Name = "Documents")]
+        public ICollection<InstructorDocument> InstructorDocuments { get; set; } = new HashSet<InstructorDocument>();
+
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             DateTime today = DateTime.Today;

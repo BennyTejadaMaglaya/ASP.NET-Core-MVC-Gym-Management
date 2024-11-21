@@ -3,7 +3,7 @@
 <partial name="_ViewHeading" />
 
 <hr />
-<form asp-action="Create">
+<form asp-action="Create" method="post" enctype="multipart/form-data">
 	<div asp-validation-summary="ModelOnly" class="text-danger"></div>
 	<div class="row">
 		<div class="col-md-4">
@@ -36,13 +36,19 @@
 			</div>
 			<div class="form-group">
 				<label asp-for="Email" class="control-label"></label>
-				<input asp-for="Email" class="form-control" />
+				<input asp-for="Email" class="form-control" placeholder="eg: name@Host.com" />
 				<span asp-validation-for="Email" class="text-danger"></span>
 			</div>
 			<div class="form-group form-check">
 				<label class="form-check-label">
 					<input class="form-check-input" asp-for="IsActive" /> @Html.DisplayNameFor(model => model.IsActive)
 				</label>
+			</div>
+			<div class="form-group">
+				<label class="control-label custom-file-label">Upload Documents:</label>
+				<div class="input-group mb-3">
+					<input type="file" class="form-control" name="theFiles" multiple="multiple">
+				</div>
 			</div>
 		</div>
 	</div>

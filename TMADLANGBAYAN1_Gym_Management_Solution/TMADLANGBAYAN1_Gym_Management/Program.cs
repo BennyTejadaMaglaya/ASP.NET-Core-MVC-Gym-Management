@@ -49,12 +49,12 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapRazorPages();
 
-//To prepare the database and seed data.  Can comment this out some of the time.
+// To prepare the database and seed data
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-
-    GymInitializer.Initialize(services, true);
+    GymInitializer.Initialize(serviceProvider: services, DeleteDatabase: true,
+        UseMigrations: true, SeedSampleData: true);
 }
 
 app.Run();

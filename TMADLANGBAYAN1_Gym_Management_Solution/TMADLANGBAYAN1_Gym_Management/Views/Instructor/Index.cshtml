@@ -58,6 +58,9 @@
 				<th>
 					<input type="submit" value="Active" class="btn btn-toolbar" />
 				</th>
+				<th class="d-none d-xl-table-cell">
+					@Html.DisplayNameFor(model => model.InstructorDocuments)
+				</th>
 				<th></th>
 			</tr>
 		</thead>
@@ -80,6 +83,33 @@
 					<td>
 						@Html.DisplayFor(modelItem => item.IsActive)
 					</td>
+					<td class="d-none d-xl-table-cell">
+						@{
+							int fileCount = item.InstructorDocuments.Count;
+							if (fileCount > 0)
+							{
+								var firstFile = item.InstructorDocuments.FirstOrDefault(); ;
+								if (fileCount > 1)
+								{
+									<a class="" role="button" data-bs-toggle="collapse" href="#collapseDocs@(item.ID)" aria-expanded="false" aria-controls="collapseDocs@(item.ID)">
+										<span class="badge bg-info">@fileCount</span> Documents...
+									</a>
+									<div class="collapse" id="collapseDocs@(item.ID)">
+										@{
+											foreach (var d in item.InstructorDocuments)
+											{
+												<a asp-action="Download" asp-route-id="@d.ID">@d.FileName</a> <br />
+											}
+										}
+									</div>
+								}
+								else
+								{
+									<a asp-action="Download" asp-route-id="@firstFile?.ID">@firstFile?.FileName</a>
+								}
+							}
+						}
+					</td>
 					<td>
 						<a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
 						<a asp-action="Details" asp-route-id="@item.ID">Details</a> |
@@ -91,3 +121,11 @@
 	</table>
 	<partial name="_PagingNavBar" />
 </form>
+@section Scripts {
+	<script type="text/javascript">
+		var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+		var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+			return new bootstrap.Tooltip(tooltipTriggerEl)
+		})
+	</script>
+}

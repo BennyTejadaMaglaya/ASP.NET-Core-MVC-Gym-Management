@@ -36,7 +36,8 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
 			//Then in each "test" for filtering, add to the count of Filters applied
 
 			var gymContext = _context.Instructors
-				.AsNoTracking()
+                .Include(d => d.InstructorDocuments)
+                .AsNoTracking()
 				;
 
 			//Add as many filters as needed
@@ -172,6 +173,7 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
                     .ThenInclude(gc => gc.FitnessCategory)
                 .Include(i => i.GroupClasses)
                     .ThenInclude(gc => gc.ClassTime)
+                .Include(i => i.InstructorDocuments)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(i => i.ID == id)
                 ;
@@ -194,12 +196,13 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ID,FirstName,MiddleName,LastName,HireDate,Phone,Email,IsActive")] Instructor instructor)
+        public async Task<IActionResult> Create([Bind("ID,FirstName,MiddleName,LastName,HireDate,Phone,Email,IsActive")] Instructor instructor, List<IFormFile> theFiles)
         {
             try
             {
                 if (ModelState.IsValid)
                 {
+                    await AddDocumentsAsync(instructor, theFiles);
                     _context.Add(instructor);
                     await _context.SaveChangesAsync();
                     TempData["SuccessMessage"] = "Instructor successfully added!";
@@ -232,7 +235,9 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
                 return NotFound();
             }
 
-            var instructor = await _context.Instructors.FindAsync(id);
+            var instructor = await _context.Instructors
+                .Include(i => i.InstructorDocuments)
+                .FirstOrDefaultAsync(d => d.ID == id);
             if (instructor == null)
             {
                 return NotFound();
@@ -245,9 +250,11 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id)
+        public async Task<IActionResult> Edit(int id, List<IFormFile> theFiles)
         {
-            var InstructorToUpdate = await _context.Instructors.FirstOrDefaultAsync(i => i.ID == id);
+            var InstructorToUpdate = await _context.Instructors
+                .Include(i => i.InstructorDocuments)
+                .FirstOrDefaultAsync(i => i.ID == id);
 
             if (InstructorToUpdate == null)
             {
@@ -259,6 +266,7 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
             {
                 try
                 {
+                    await AddDocumentsAsync(InstructorToUpdate, theFiles);
                     await _context.SaveChangesAsync();
                     TempData["SuccessMessage"] = "Instructor successfully updated!";
 					//return RedirectToAction(nameof(Index));
@@ -301,6 +309,7 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
             }
 
             var instructor = await _context.Instructors
+                .Include(i => i.InstructorDocuments)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(i => i.ID == id)
                 ;
@@ -318,8 +327,9 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var instructor = await _context.Instructors
-                .FirstOrDefaultAsync(i => i.ID == id)
-                ;
+                .Include(i => i.InstructorDocuments)
+                .FirstOrDefaultAsync(i => i.ID == id);
+            ;
 
             try
             {
@@ -349,6 +359,47 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
                 }
             }/**/
             return View(instructor);
+        }
+
+        public async Task<FileContentResult> Download(int id)
+        {
+            var theFile = await _context.UploadedFiles
+                .Include(d => d.FileContent)
+                .Where(f => f.ID == id)
+                .FirstOrDefaultAsync();
+
+            if (theFile?.FileContent?.Content == null || theFile.MimeType == null)
+            {
+                return new FileContentResult(Array.Empty<byte>(), "application/octet-stream");
+            }
+            return File(theFile.FileContent.Content, theFile.MimeType, theFile.FileName);
+        }
+
+        private async Task AddDocumentsAsync(Instructor instructor, List<IFormFile> theFiles)
+        {
+            foreach (var f in theFiles)
+            {
+                if (f != null)
+                {
+                    string mimeType = f.ContentType;
+                    string fileName = Path.GetFileName(f.FileName);
+                    long fileLength = f.Length;
+                    // Note: you could filter for mime types if you only want to allow
+                    // certain types of files. I am allowing everything.
+                    if (!(fileName == "" || fileLength == 0)) // Looks like we have a file!
+                    {
+                        InstructorDocument d = new InstructorDocument();
+                        using (var memoryStream = new MemoryStream())
+                        {
+                            await f.CopyToAsync(memoryStream);
+                            d.FileContent.Content = memoryStream.ToArray();
+                        }
+                        d.MimeType = mimeType;
+                        d.FileName = fileName;
+                        instructor.InstructorDocuments.Add(d);
+                    };
+                }
+            }
         }
 
         private bool InstructorExists(int id)
