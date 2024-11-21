@@ -6,18 +6,30 @@ namespace TMADLANGBAYAN1_Gym_Management.Models
 	{
         public int ID { get; set; }
 
-        [Display(Name = "Summary")]
-        public string Summary
-        {
-            get
-            {
-                string category = FitnessCategory?.Category ?? "Unknown Category";
-                string time = ClassTime?.StartTime ?? "Unknown Time";
-                return $"{category} – {DOW} {time}";
-            }
-        }
+		#region Summary Properties
+		[Display(Name = "Class")]
+		public string Summary
+		{
+			get
+			{
+				string summary; ;
+				if (FitnessCategory != null && ClassTime != null)
+				{
+					summary = FitnessCategory.Category + " - " + DOW.ToString() + " " + ClassTime.StartTime;
+				}
+				else
+				{
+					summary = "Class - " + DOW.ToString() + " " + ClassTimeID.ToString() + ":00 Hrs";
+				}
+				return summary;
+			}
+		}
 
-        [Display(Name = "Description")]
+		[Display(Name = "Description")]
+		public string ShortDescription => Description.Length > 20 ? Description.Substring(0, 20) + "..." : Description;
+		#endregion
+
+		[Display(Name = "Description")]
         public string TruncatedDescription
         {
             get
