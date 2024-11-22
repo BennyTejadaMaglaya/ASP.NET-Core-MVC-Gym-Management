@@ -27,6 +27,12 @@
 				@Html.DisplayFor(model => Model.MembershipNumber)
 			</dd>
 			<dt class="col-md-4">
+				@Html.DisplayNameFor(model => Model.MembershipStatus)
+			</dt>
+			<dd class="col-md-8">
+				@Html.DisplayFor(model => Model.MembershipStatus)
+			</dd>
+			<dt class="col-md-4">
 				@Html.DisplayNameFor(model => Model.LastName)
 			</dt>
 			<dd class="col-md-8">
@@ -44,16 +50,16 @@
 			<dd class="col-md-8">
 				@Model.Age (@Html.DisplayFor(model => Model.DOB))
 			</dd>
+		</dl>
+	</div>
+	<div class="col-6">
+		<dl class="row">
 			<dt class="col-md-4">
 				@Html.DisplayNameFor(model => Model.PostalCode)
 			</dt>
 			<dd class="col-md-8">
 				@Html.DisplayFor(model => Model.PostalCode)
 			</dd>
-		</dl>
-	</div>
-	<div class="col-6">
-		<dl class="row">
 			<dt class="col-md-4">
 				@Html.DisplayNameFor(model => Model.Phone)
 			</dt>
@@ -67,10 +73,10 @@
 				@Html.DisplayFor(model => Model.Email)
 			</dd>
 			<dt class="col-md-4">
-				@Html.DisplayNameFor(model => Model.MembershipType)
+				@Html.DisplayNameFor(model => Model.MembershipFee)
 			</dt>
 			<dd class="col-md-8">
-				@Html.DisplayFor(model => Model.MembershipType.Type)
+				@Html.DisplayFor(model => Model.MembershipFee)
 			</dd>
 			<dt class="col-md-4">
 				@Html.DisplayNameFor(model => Model.Enrollments)
