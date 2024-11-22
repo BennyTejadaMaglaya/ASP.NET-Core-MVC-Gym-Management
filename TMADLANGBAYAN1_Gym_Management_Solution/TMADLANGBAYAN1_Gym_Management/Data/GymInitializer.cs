@@ -601,6 +601,79 @@ namespace TMADLANGBAYAN1_Gym_Management.Data
                             }
                         }
                     }
+
+                    // Add some Workouts
+
+                    int[] exerciseIDs = context.Exercises.Select(a => a.ID).ToArray();
+                    int exercisesIDCount = exerciseIDs.Length;
+
+                    if (!context.Workouts.Any())
+                    {
+                        foreach (int cID in clientIDs)
+                        {
+                            if (random.Next(1, 11) > 9)
+                                continue; // Skip some clients
+                            int howMany = random.Next(3, 21);
+                            for (int i = 1; i <= howMany; i++)
+                            {
+                                Workout workout = new Workout()
+                                {
+                                    ClientID = cID,
+                                    StartTime = DateTime.Today.AddDays(-1 * random.Next(120)),
+                                    Notes = baconNotes[random.Next(5)],
+                                };
+                                // InstructorID
+                                if (random.Next(1, 7) > 3)
+                                    workout.InstructorID = instructorIDs[random.Next(instructorIDCount)];
+                                // Times
+                                workout.StartTime = workout.StartTime.AddHours(random.Next(6, 20)); // 6 AM to 7 PM
+                                workout.EndTime = workout.StartTime.AddMinutes(random.Next(4, 13) * 10); // + 40 to 120 minutes
+                                try
+                                {
+                                    context.Workouts.Add(workout);
+                                    context.SaveChanges();
+                                }
+                                catch (Exception)
+                                {
+                                    context.Workouts.Remove(workout);
+                                }
+                            }
+                        }
+                    }
+
+                    // Add some WorkoutExercises
+
+                    int[] workoutIDs = context.Workouts.Select(a => a.ID).ToArray();
+                    int workoutIDCount = workoutIDs.Length;
+
+                    if (!context.WorkoutExercises.Any())
+                    {
+                        foreach (int w in workoutIDs)
+                        {
+                            int minutes = context.Workouts
+                                .Where(x => x.ID == w)
+                                .Select(x => (int)(x.EndTime.Value - x.StartTime).TotalMinutes)
+                                .FirstOrDefault();
+                            int howMany = minutes / 10; // One exercise every 10 minutes
+                            for (int j = 1; j < howMany; j++)
+                            {
+                                WorkoutExercise workoutExercise = new WorkoutExercise()
+                                {
+                                    WorkoutID = w,
+                                    ExerciseID = exerciseIDs[random.Next(exercisesIDCount)]
+                                };
+                                try
+                                {
+                                    context.WorkoutExercises.Add(workoutExercise);
+                                    context.SaveChanges();
+                                }
+                                catch (Exception)
+                                {
+                                    context.WorkoutExercises.Remove(workoutExercise);
+                                }
+                            }
+                        }
+                    }
                 }
 
                 #endregion
