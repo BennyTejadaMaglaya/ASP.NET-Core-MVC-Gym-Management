@@ -18,12 +18,26 @@
 			<div class="collapse card card-body bg-light" style="padding-top: 10px; padding-bottom: 5px;" id="collapseFilter">
 				<div class="row">
 					<div class="form-group col-md-4 ml-md-3">
+						<label class="control-label">Select by Exercise:</label>
+						@Html.DropDownList("ExerciseID", null, "All Exercises", htmlAttributes: new { @class = "form-control" })
+					</div>
+					<div class="form-group col-md-4 ml-md-3">
 						<label class="control-label">Select by Instructor:</label>
 						@Html.DropDownList("InstructorID", null, "All Instructors", htmlAttributes: new { @class = "form-control" })
 					</div>
 					<div class="form-group col-md-4">
 						<label class="control-label">Search Notes:</label>
 						@Html.TextBox("SearchString", null, new { @class = "form-control" })
+					</div>
+					<div class="form-group col-md-4 ml-md-3">
+						<label for="startDate">Start Date:</label>
+						<input type="datetime-local" id="startDate" name="startDate" class="form-control"
+							   value="@ViewData["StartDate"]" />
+					</div>
+					<div class="form-group col-md-4 ml-md-3">
+						<label for="endDate">End Date:</label>
+						<input type="datetime-local" id="endDate" name="endDate" class="form-control"
+							   value="@ViewData["EndDate"]" />
 					</div>
 					<div class="form-group col-md-4 align-self-end">
 						<input type="submit" name="actionButton" value="Apply" class="btn btn-primary" />
@@ -36,7 +50,7 @@
 			<table class="table">
 				<tr>
 					<th>
-						<input type="submit" name="actionButton" value="Appointment" class="btn btn-link" />
+						<input type="submit" name="actionButton" value="Workout" class="btn btn-link" />
 					</th>
 					<th>
 						<input type="submit" name="actionButton" value="Instructor" class="btn btn-link" />
@@ -44,11 +58,14 @@
 					<th class="d-none d-xl-table-cell">
 						<input type="submit" value="Notes" class="btn btn-toolbar" />
 					</th>
+					<th class="d-none d-xl-table-cell">
+						<input type="submit" value="Exercises" class="btn btn-toolbar" />
+					</th>
 					<th>
 						<a asp-controller="ClientWorkout" asp-action="Add"
 						   asp-route-ClientID="@client.ID" asp-route-ClientName="@client.Summary">
 							<span class="btn btn-success" data-bs-toggle="tooltip"
-								  title="Add Appointment"><strong>&#x271A; Add</strong></span>
+								  title="Add Workout"><strong>&#x271A; Add</strong></span>
 						</a>
 					</th>
 				</tr>
@@ -86,6 +103,35 @@
 								}
 							}
 						</td>
+						<td class="d-none d-xl-table-cell">
+							@{
+								int condCount = item.WorkoutExercises.Count;
+								if (condCount > 0)
+								{
+									string firstCond = item.WorkoutExercises.FirstOrDefault().Exercise.Name;
+									if (condCount > 1)
+									{
+										string condList = "";
+										var c = item.WorkoutExercises.ToList();
+										for (int i = 1; i < condCount; i++)//Skip the first because we have it already
+										{
+											condList += c[i].Exercise.Name + " <br />";
+										}
+										<a class="" role="button" data-bs-toggle="collapse" href="#collapseHistory@(item.ID)"
+										   aria-expanded="false" aria-controls="collapseHistory@(item.ID)">
+											@firstCond <span class="badge bg-info">@condCount</span>
+										</a>
+										<div class="collapse" id="collapseHistory@(item.ID)">
+											@Html.Raw(condList)
+										</div>
+									}
+									else
+									{
+										@firstCond
+									}
+								}
+							}
+						</td>
 						<td>
 							<a asp-controller="ClientWorkout" asp-action="Update" asp-route-id="@item.ID"
 							   class="btn btn-sm btn-outline-primary" role="button"
@@ -113,7 +159,7 @@
 	<script type="text/javascript">
 		var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
 		var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-			return new bootstrap.Tooltip(tooltipTriggerEl)
+				  return new bootstrap.Tooltip(tooltipTriggerEl)
 		})
 	</script>
 }

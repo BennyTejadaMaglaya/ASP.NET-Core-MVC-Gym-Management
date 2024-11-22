@@ -9,20 +9,22 @@ using TMADLANGBAYAN1_Gym_Management.CustomControllers;
 using TMADLANGBAYAN1_Gym_Management.Data;
 using TMADLANGBAYAN1_Gym_Management.Models;
 using TMADLANGBAYAN1_Gym_Management.Utilities;
+using TMADLANGBAYAN1_Gym_Management.ViewModels;
 
 namespace TMADLANGBAYAN1_Gym_Management.Controllers
 {
     public class ClientWorkoutController : ElephantController
 	{
-        private readonly GymContext _context;
+		private readonly GymContext _context;
+		private static readonly string[] DurationItems = ["10", "20", "30", "40", "50", "60", "90", "120"];
 
-        public ClientWorkoutController(GymContext context)
-        {
-            _context = context;
-        }
+		public ClientWorkoutController(GymContext context)
+		{
+			_context = context;
+		}
 
 		// GET: ClientWorkout
-		public async Task<IActionResult> Index(int? ClientID, int? page, int? pageSizeID, int? InstructorID, string actionButton,
+		public async Task<IActionResult> Index(int? ClientID, int? page, int? pageSizeID, int? InstructorID, int? ExerciseID, DateTime? startDate, DateTime? endDate, string actionButton,
 			string SearchString, string sortDirection = "desc", string sortField = "Workout")
 		{
 			//Get the URL with the last filter, sort and page parameters from THE CLIENTS Index View
@@ -47,7 +49,7 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
 			var workout = from w in _context.Workouts
 						.Include(w => w.Instructor)
 						.Include(w => w.Client)
-						.Include(w => w.WorkoutExercises)
+						.Include(w => w.WorkoutExercises).ThenInclude(we => we.Exercise)
 						where w.ClientID == ClientID.GetValueOrDefault()
 						select w;
 
@@ -55,6 +57,15 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
 			{
 				workout = workout.Where(w => w.InstructorID == InstructorID);
 				numberFilters++;
+			}
+			if (ExerciseID.HasValue)
+			{
+				workout = workout.Where(w => w.WorkoutExercises.Any(we => we.ExerciseID == ExerciseID));
+				numberFilters++;
+			}
+			if (startDate.HasValue && endDate.HasValue)
+			{
+				workout = workout.Where(w => w.StartTime >= startDate.Value && w.StartTime <= endDate.Value);
 			}
 			if (!String.IsNullOrEmpty(SearchString))
 			{
@@ -93,12 +104,14 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
 				if (sortDirection == "asc")
 				{
 					workout = workout
-						.OrderBy(w => w.Instructor.FormalName);
+						.OrderBy(w => w.Instructor.LastName)
+						.ThenBy(w => w.Instructor.FirstName);
 				}
 				else
 				{
 					workout = workout
-						.OrderByDescending(w => w.Instructor.FormalName);
+						.OrderByDescending(w => w.Instructor.LastName)
+						.ThenBy(w => w.Instructor.FirstName);
 				}
 			}
 			else //Workout Date
@@ -114,6 +127,11 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
 						.OrderBy(w => w.StartTime);
 				}
 			}
+
+			ViewData["ExerciseID"] = new SelectList(_context
+				.Exercises
+				.OrderBy(e => e.Name), "ID", "Name");
+
 			//Set sort for next time
 			ViewData["sortField"] = sortField;
 			ViewData["sortDirection"] = sortDirection;
@@ -147,12 +165,13 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
 			}
 
 			ViewData["ClientName"] = ClientName;
-			//ViewData["Duration"] = new SelectList(DurationItems, "20");
+			ViewData["Duration"] = new SelectList(DurationItems, "20");
 			Workout w = new Workout()
 			{
 				ClientID = ClientID.GetValueOrDefault(),
-				//StartTime = DateUtilities.GetNextWeekday(DateTime.Today, 3)
+				StartTime = DateUtilities.GetNextWeekday(DateTime.Today, 3)
 			};
+			PopulateAssignedExerciseData(w);
 			PopulateDropDownLists();
 			return View(w);
 		}
@@ -162,11 +181,22 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
 		// more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> Add([Bind("StartTime,EndTime,Notes,ClientID,InstructorID")] Workout workout, string ClientName, int Duration)
+		public async Task<IActionResult> Add([Bind("StartTime,EndTime,Notes,ClientID,InstructorID")] Workout workout, string ClientName, int Duration, string[] selectedOptions)
 		{
 			try
 			{
+				//Add the selected conditions
+				if (selectedOptions != null)
+				{
+					foreach (var exercise in selectedOptions)
+					{
+						var workoutToAdd = new WorkoutExercise { WorkoutID = workout.ID, ExerciseID = int.Parse(exercise) };
+						workout.WorkoutExercises.Add(workoutToAdd);
+					}
+				}
+
 				workout.EndTime = workout.StartTime.AddMinutes(Duration);
+
 				if (ModelState.IsValid)
 				{
 					_context.Add(workout);
@@ -180,9 +210,10 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
 					"persists see your system administrator.");
 			}
 
+			PopulateAssignedExerciseData(workout);
 			PopulateDropDownLists(workout);
 			ViewData["ClientName"] = ClientName;
-			//ViewData["Duration"] = new SelectList(DurationItems, Duration);
+			ViewData["Duration"] = new SelectList(DurationItems, Duration);
 			return View(workout);
 		}
 
@@ -197,6 +228,7 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
 			var workout = await _context.Workouts
 			   .Include(w => w.Instructor)
 			   .Include(w => w.Client)
+			   .Include(w => w.WorkoutExercises).ThenInclude(we => we.Exercise)
 			   .AsNoTracking()
 			   .FirstOrDefaultAsync(w => w.ID == id);
 			if (workout == null)
@@ -204,6 +236,7 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
 				return NotFound();
 			}
 
+			PopulateAssignedExerciseData(workout);
 			PopulateDropDownLists(workout);
 			return View(workout);
 
@@ -215,11 +248,12 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
 		// more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> Update(int id)
+		public async Task<IActionResult> Update(int id, string[] selectedOptions)
 		{
 			var workoutToUpdate = await _context.Workouts
 				.Include(w => w.Instructor)
 				.Include(w => w.Client)
+				.Include(w => w.WorkoutExercises).ThenInclude(we => we.Exercise)
 				.FirstOrDefaultAsync(w => w.ID == id);
 
 			//Check that you got it or exit with a not found error
@@ -228,9 +262,11 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
 				return NotFound();
 			}
 
+			UpdateWorkoutExercises(selectedOptions, workoutToUpdate);
+
 			//Try updating it with the values posted
 			if (await TryUpdateModelAsync<Workout>(workoutToUpdate, "",
-				w => w.StartTime, w => w.EndTime, w => w.Notes, w => w.InstructorID))
+				w => w.StartTime, w => w.EndTime, w => w.Notes, w => w.InstructorID, w => w.WorkoutExercises))
 			{
 				try
 				{
@@ -257,6 +293,7 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
 				}
 			}
 			PopulateDropDownLists(workoutToUpdate);
+			PopulateAssignedExerciseData(workoutToUpdate);
 			return View(workoutToUpdate);
 		}
 
@@ -318,6 +355,71 @@ namespace TMADLANGBAYAN1_Gym_Management.Controllers
 		private void PopulateDropDownLists(Workout? workout = null)
 		{
 			ViewData["InstructorID"] = InstructorSelectList(workout?.InstructorID);
+		}
+
+		/// <summary>
+		/// Prepare a colleciton of check box ViewModel objects, one for each
+		/// exercise.  Set Assigned to True for those already in the Patient's
+		/// medical history.
+		/// </summary>
+		/// <param name="workout">the Workout</param>
+		private void PopulateAssignedExerciseData(Workout workout)
+		{
+			//For this to work, you must have Included the WorkoutExercises 
+			//in the Patient
+			var allOptions = _context.Exercises;
+			var currentOptionIDs = new HashSet<int>(workout.WorkoutExercises.Select(we => we.ExerciseID));
+			var checkBoxes = new List<CheckOptionVM>();
+			foreach (var option in allOptions)
+			{
+				checkBoxes.Add(new CheckOptionVM
+				{
+					ID = option.ID,
+					DisplayText = option.Name,
+					Assigned = currentOptionIDs.Contains(option.ID)
+				});
+			}
+			ViewData["ExerciseOptions"] = checkBoxes;
+		}
+
+		/// <summary>
+		/// Update the WorkoutExercises for the Patient to match
+		/// the selected Check Boxes.
+		/// </summary>
+		/// <param name="selectedOptions">ID's of the selected options</param>
+		/// <param name="workoutToUpdate">the Patient</param>
+		private void UpdateWorkoutExercises(string[] selectedOptions, Workout workoutToUpdate)
+		{
+			if (selectedOptions == null)
+			{
+				//replace with a new empty collection
+				workoutToUpdate.WorkoutExercises = new List<WorkoutExercise>();
+				return;
+			}
+
+			var selectedOptionsHS = new HashSet<string>(selectedOptions);
+			var patientOptionsHS = new HashSet<int>
+				(workoutToUpdate.WorkoutExercises.Select(we => we.ExerciseID));//IDs of the currently selected conditions
+			foreach (var option in _context.Exercises)
+			{
+				if (selectedOptionsHS.Contains(option.ID.ToString())) //It is checked
+				{
+					if (!patientOptionsHS.Contains(option.ID))  //but not currently in the history
+					{
+						workoutToUpdate.WorkoutExercises.Add(new WorkoutExercise { WorkoutID = workoutToUpdate.ID, ExerciseID = option.ID });
+					}
+				}
+				else
+				{
+					//Checkbox Not checked
+					if (patientOptionsHS.Contains(option.ID)) //but it is currently in the history - so remove it
+					{
+						WorkoutExercise exerciseToRemove = workoutToUpdate
+							.WorkoutExercises.SingleOrDefault(we => we.ExerciseID == option.ID);
+						_context.Remove(exerciseToRemove);
+					}
+				}
+			}
 		}
 
 		private bool WorkoutExists(int id)
