@@ -5,3 +5,4 @@ Add-Migration -Context GymContext -OutputDir Data\GMigrations Initial
 update-database -Context GymContext
 
 Install-Package SkiaSharp
+Install-Package EPPlus -v 4.5.3.3

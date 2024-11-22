@@ -1,0 +1,62 @@
+﻿@model IEnumerable<TMADLANGBAYAN1_Gym_Management.ViewModels.MembershipSummaryVM>
+
+@{
+    ViewData["Title"] = "Membership Type Summary";
+}
+
+<h1>Membership Type Summary</h1>
+
+<a asp-action="MembershipSummaryExport" class="btn btn-info float-end">Export to Excel</a>
+
+<form asp-action="MembershipSummary" method="get">
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Membership_Type)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Number_Of_Clients)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Average_Fee)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Highest_Fee)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Lowest_Fee)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Total_Fees)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Membership_Type)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Number_Of_Clients)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Average_Fee)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Highest_Fee)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Lowest_Fee)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Total_Fees)
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+<partial name="_PagingNavBar" />
+</form>
